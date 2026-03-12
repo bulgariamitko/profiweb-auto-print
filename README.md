@@ -34,6 +34,17 @@ python3 auto_print.py --printer 10.0.0.50 document.pdf
 python3 auto_print.py --printer 10.0.0.50 --dry-run *.icjx
 ```
 
+## Default Admin Passwords
+
+These are Konica Minolta's **factory default** admin passwords. You'll need these for admin operations via `checkAdminPwd.fcgi`. Operator login (`sessionLogin.fcgi`) does not require a password.
+
+| Model | Default Admin Password |
+|-------|----------------------|
+| AccurioPrint 2100, C754e | `12345678` |
+| AccurioPress C654e, C759 | `1234567812345678` |
+
+> **Note**: These are well-known factory defaults. Change them in production if security is a concern.
+
 ## How It Works
 
 ### .icjx Files (ProfiWEB mode — default)

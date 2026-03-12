@@ -2,7 +2,7 @@
 
 **Device**: KONICA MINOLTA AccurioPrint 2100
 **Web Interface**: AccurioPro Print Manager (ProfiWEB)
-**Base URL**: `http://192.168.1.131:30083`
+**Base URL**: `http://PRINTER_IP:30083`
 **Software Version**: 1.0PW-4030
 
 ---
@@ -29,8 +29,8 @@
 The AccurioPro ProfiWEB interface is an AngularJS 1.8.2 web application that communicates with the print server via `.fcgi` endpoints. All API calls use standard HTTP GET/POST with URL-encoded form data. Responses are JSON.
 
 The frontend JavaScript is bundled in:
-- `http://192.168.1.131:30083/bundle.js` (3.8MB, minified)
-- `http://192.168.1.131:30083/build/loader.js`
+- `http://PRINTER_IP:30083/bundle.js` (3.8MB, minified)
+- `http://PRINTER_IP:30083/build/loader.js`
 
 The internal AngularJS module is called `"profiweb"` and uses a custom `fcgiSrv` service that wraps `$http`.
 
@@ -56,7 +56,7 @@ GET /register.fcgi?sessionId=-1&viewId=-1&ts={timestamp}
 **Response:**
 ```json
 {
-  "sessionId": "stvGaOk77Lwn1pp8NpKMPMSiOHWA",
+  "sessionId": "xAbCdEfGhIjKlMnOpQrStUvWxYz",
   "viewId": 0
 }
 ```
@@ -288,7 +288,7 @@ The `jobRestore.fcgi` endpoint imports `.icjx` files directly into the Hold queu
 ```bash
 SESSION="your-session-id"
 
-curl -X POST "http://192.168.1.131:30083/jobRestore.fcgi" \
+curl -X POST "http://PRINTER_IP:30083/jobRestore.fcgi" \
   -H "Content-Type: multipart/form-data" \
   -F "sessionId=$SESSION" \
   -F "viewId=0" \
@@ -310,7 +310,7 @@ Content-Disposition: form-data; name="viewId"\r\n
 \r\n
 0\r\n
 ------WebKitFormBoundary...\r\n
-Content-Disposition: form-data; name="file"; filename="Proba booklet.pdf 20260312114633.icjx"\r\n
+Content-Disposition: form-data; name="file"; filename="sample-document.pdf 20260101120000.icjx"\r\n
 Content-Type: application/octet-stream\r\n
 \r\n
 {binary file data}\r\n
@@ -347,7 +347,7 @@ Content-Type: application/octet-stream\r\n
 ### CONFIRMED WORKING - Upload to Hold Queue
 
 ```bash
-curl -X POST "http://192.168.1.131:30083/jobSubmit.fcgi" \
+curl -X POST "http://PRINTER_IP:30083/jobSubmit.fcgi" \
   -F "file=@/path/to/document.pdf;filename=document.pdf" \
   -F "sessionId={sessionId}" \
   -F "viewId=0" \
@@ -375,7 +375,7 @@ curl -X POST "http://192.168.1.131:30083/jobSubmit.fcgi" \
 Used for non-job uploads (tone curves, localization files, etc.):
 
 ```bash
-curl -X POST "http://192.168.1.131:30083/createDownload.fcgi" \
+curl -X POST "http://PRINTER_IP:30083/createDownload.fcgi" \
   -F "file=@/path/to/file" \
   -F "contentType=application/pdf" \
   -F "filename=myfile.pdf"
@@ -404,17 +404,17 @@ GET /jobList.fcgi?containerId=268435441&sessionId={sid}&viewId=0&ts={ts}
   "jobLists": [{
     "containerId": 268435441,
     "jobs": [{
-      "jobId": 20750,
-      "name": "az chovek sam booklet.pdf",
+      "jobId": 12345,
+      "name": "sample-document.pdf",
       "owner": "",
       "pages": 14,
       "jobType": "print",
       "status": "edited",
       "pdl": "pdf",
       "pdlFileSize": 632127,
-      "datePrintEnd": 1773235245,
-      "dateModified": 1773235200,
-      "dateStored": 1773235000,
+      "datePrintEnd": 1700000045,
+      "dateModified": 1700000000,
+      "dateStored": 1699999800,
       "isPrinted": "True",
       "notRiped": "False",
       "activeToHold": "False",
@@ -583,14 +583,14 @@ GET /containerList.fcgi?sessionId={sid}&viewId=0&ts={ts}
 | History | 268435444 | finished | Completed jobs (max 200) |
 | Editable Active | 268435445 | activeHold | Active jobs that can be edited |
 
-### HDD Sub-Structure (on this device)
+### HDD Sub-Structure (example)
 ```
 HDD (268369922)
 └── Public (268369938)
-    └── izdavam (65554) - 44 jobs stored
+    └── MyFolder (65554) - stored jobs
 ```
 
-### Storage Info
+### Storage Info (example)
 - Copy/RIPed Data: 324 GB of 590 GB Free
 - Pre-RIP Data/Scan/Form: 153 GB of 166 GB Free
 
@@ -608,17 +608,17 @@ GET /deviceInfo.fcgi?sessionId={sid}&viewId=0&ts={ts}
   "printerInformation": {
     "deviceName": "KONICA MINOLTA AccurioPrint 2100",
     "printerName": "2100",
-    "macAddress": "00:50:AA:2C:DA:08",
-    "ipV4Address": "192.168.1.131",
+    "macAddress": "00:11:AA:BB:CC:DD",
+    "ipV4Address": "PRINTER_IP",
     "administratorMode": false,
     "hotFolderEnabled": true
   },
   "toner": [{"name": "black", "level": "ready", "amount": 90}],
   "inputTrays": [
     {"trayId": "Tray1", "TargetPaperSize": "A3", "paperAmount": 2,
-     "MainPaperProfileName": "Offset 80 420x297 TEST", "FeedDir": "ShortEdge"},
+     "MainPaperProfileName": "Plain 80gsm A3", "FeedDir": "ShortEdge"},
     {"trayId": "Tray2", "TargetPaperSize": "A4", "paperAmount": 5,
-     "MainPaperProfileName": "novo Offset120grA4 210x297", "FeedDir": "LongEdge"}
+     "MainPaperProfileName": "Coated 120gsm A4", "FeedDir": "LongEdge"}
   ]
 }
 ```
@@ -632,8 +632,8 @@ GET /productionData.fcgi?sessionId={sid}&viewId=0&ts={ts}
 Returns current printing status:
 ```json
 {
-  "jobId": 22604,
-  "jobName": "10660A3 Milen.pdf",
+  "jobId": 12350,
+  "jobName": "brochure-A3.pdf",
   "printedCopies": 0,
   "printedPages": 202,
   "totalCopies": 3,
@@ -662,7 +662,7 @@ The `.icjx` file is a **Konica Minolta AccurioPro Print Manager proprietary form
     │   ├── Bytes 0-3: 0xFFFFFFFF  (signature)
     │   ├── Job name (repeated 3x)
     │   ├── "_SAMEASIMAGE" string
-    │   ├── IP address of source printer (e.g., "192.168.1.238")
+    │   ├── IP address of source printer (e.g., "10.0.0.100")
     │   └── Various binary settings
     ├── [gzip-compressed tar]       (at offset ~41056, starts with 0x1F8B)
     │   ├── {jobid}.pre             (THE ACTUAL PDF FILE - %PDF-1.4)
@@ -720,7 +720,7 @@ for member in inner_tar.getmembers():
 
 **From Python http.client**: Returns `AioJobNoExists` or `InternalError`.
 
-**From browser**: Successfully prints jobs. Confirmed working with jobs 100022612, 100022626, 100022633.
+**From browser**: Successfully prints jobs (confirmed working with multiple test jobs).
 
 **Not needed for basic printing**: Use `jobPrintAndUnlock.fcgi` instead (see above), which works from both curl and Python.
 
@@ -762,14 +762,14 @@ jobId={id}&containerId={cid}&printMode=Print&deleteJob=true&numOfCopies=1&isLock
 
 ```bash
 # 1. Register session
-SESSION=$(curl -s "http://192.168.1.131:30083/register.fcgi?sessionId=-1&viewId=-1&ts=$(date +%s)000" | python3 -c "import sys,json; print(json.load(sys.stdin)['sessionId'])")
+SESSION=$(curl -s "http://PRINTER_IP:30083/register.fcgi?sessionId=-1&viewId=-1&ts=$(date +%s)000" | python3 -c "import sys,json; print(json.load(sys.stdin)['sessionId'])")
 
 # 2. Login as Operator
-curl -s -X POST "http://192.168.1.131:30083/sessionLogin.fcgi" \
+curl -s -X POST "http://PRINTER_IP:30083/sessionLogin.fcgi" \
   -d "notauthuser=Operator&sessionId=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$SESSION'))")&viewId=0&ts=$(date +%s)000"
 
 # 3. Upload PDF to Hold queue
-curl -s -X POST "http://192.168.1.131:30083/jobSubmit.fcgi" \
+curl -s -X POST "http://PRINTER_IP:30083/jobSubmit.fcgi" \
   -F "file=@/path/to/document.pdf;filename=document.pdf" \
   --form-string "sessionId=$SESSION" \
   -F "viewId=0" \
@@ -777,48 +777,118 @@ curl -s -X POST "http://192.168.1.131:30083/jobSubmit.fcgi" \
   -F "hold=true"
 
 # 4. List jobs in Hold queue
-curl -s "http://192.168.1.131:30083/jobList.fcgi?containerId=268435441&viewId=0"
+curl -s "http://PRINTER_IP:30083/jobList.fcgi?containerId=268435441&viewId=0"
 
 # 5. Get device status
-curl -s "http://192.168.1.131:30083/deviceInfo.fcgi?viewId=0"
+curl -s "http://PRINTER_IP:30083/deviceInfo.fcgi?viewId=0"
 
 # 6. Check current print production
-curl -s "http://192.168.1.131:30083/productionData.fcgi?viewId=0"
+curl -s "http://PRINTER_IP:30083/productionData.fcgi?viewId=0"
 ```
 
 ### Lock, Get Details, Unlock
 
 ```bash
-JOB_ID=20750
+JOB_ID=12345
 CID=268435441
 
 # Lock
-curl -s -X POST "http://192.168.1.131:30083/jobLock.fcgi" \
+curl -s -X POST "http://PRINTER_IP:30083/jobLock.fcgi" \
   -d "action=lock&jobId=$JOB_ID&containerId=$CID&viewId=0"
 
 # Get details
-curl -s "http://192.168.1.131:30083/jobDetails.fcgi?jobId=$JOB_ID&containerId=$CID&viewId=0"
+curl -s "http://PRINTER_IP:30083/jobDetails.fcgi?jobId=$JOB_ID&containerId=$CID&viewId=0"
 
 # Unlock
-curl -s -X POST "http://192.168.1.131:30083/jobLock.fcgi" \
+curl -s -X POST "http://PRINTER_IP:30083/jobLock.fcgi" \
   -d "action=unlock&jobId=$JOB_ID&containerId=$CID&viewId=0"
 ```
 
 ### Delete a Job
 
 ```bash
-curl -s -X POST "http://192.168.1.131:30083/jobDelete.fcgi" \
-  -d "jobId=100022612&containerId=268435441&viewId=0"
+curl -s -X POST "http://PRINTER_IP:30083/jobDelete.fcgi" \
+  -d "jobId=12345&containerId=268435441&viewId=0"
 ```
+
+### Complete .icjx Import → Print Workflow (CONFIRMED WORKING)
+
+This is the full end-to-end workflow for importing and printing an `.icjx` file:
+
+```bash
+PRINTER="10.0.0.50"  # <-- Replace with your printer's IP
+ICJX_FILE="/path/to/job.icjx"
+
+# 1. Register session
+SESSION=$(curl -s "http://$PRINTER:30083/register.fcgi?sessionId=-1&viewId=-1&ts=$(date +%s)000" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['sessionId'])")
+echo "Session: $SESSION"
+
+# 2. Login as Operator
+curl -s -X POST "http://$PRINTER:30083/sessionLogin.fcgi" \
+  --data-urlencode "notauthuser=Operator" \
+  --data-urlencode "sessionId=$SESSION" \
+  -d "viewId=0&ts=$(date +%s)000"
+
+# 3. Import .icjx file (preserves ALL embedded print settings)
+curl -s -X POST "http://$PRINTER:30083/jobRestore.fcgi" \
+  -F "file=@${ICJX_FILE};type=application/octet-stream" \
+  --form-string "sessionId=$SESSION" \
+  -F "viewId=0"
+# Response: {"result":{"type":"ok","details":[]}}
+
+# 4. Find the imported job (latest in Hold queue)
+JOB_ID=$(curl -s "http://$PRINTER:30083/jobList.fcgi?containerId=268435441&viewId=0&ts=$(date +%s)000" \
+  | python3 -c "
+import sys, json
+jobs = json.load(sys.stdin)['jobLists'][0]['jobs']
+print(jobs[-1]['jobId'])  # Latest job
+")
+echo "Job ID: $JOB_ID"
+
+# 5. Lock the job
+curl -s -X POST "http://$PRINTER:30083/jobLock.fcgi" \
+  -d "action=lock&jobId=$JOB_ID&containerId=268435441&viewId=0&ts=$(date +%s)000" \
+  --data-urlencode "sessionId=$SESSION"
+# Response: {"result":{"type":"ok","details":[]}}
+
+# 6. Print and unlock (deleteJob=true removes it after printing)
+curl -s -X POST "http://$PRINTER:30083/jobPrintAndUnlock.fcgi" \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d "jobId=$JOB_ID&containerId=268435441&printMode=Print&deleteJob=true&numOfCopies=1&isLocked=true&viewId=0&ts=$(date +%s)000" \
+  --data-urlencode "sessionId=$SESSION"
+# Response: {"result":{"type":"ok","details":[]}}
+```
+
+### Print a Locked Job (jobPrintAndUnlock.fcgi)
+
+```bash
+# All parameters are required
+curl -s -X POST "http://PRINTER_IP:30083/jobPrintAndUnlock.fcgi" \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d "jobId=JOB_ID&containerId=268435441&printMode=Print&deleteJob=true&numOfCopies=1&isLocked=true&viewId=0&ts=$(date +%s)000" \
+  --data-urlencode "sessionId=YOUR_SESSION"
+```
+
+**Parameters:**
+- `jobId` — the job ID (required)
+- `containerId` — container where the job is (268435441 = Hold)
+- `printMode` — `Print` (required)
+- `deleteJob` — `true` to delete after printing, `false` to keep
+- `numOfCopies` — number of copies (overrides the job's NumCopies setting)
+- `isLocked` — must be `true` (job must be locked first via jobLock.fcgi)
+- `sessionId` — the session that locked the job
+- `viewId` — usually `0`
+- `ts` — timestamp in milliseconds
 
 ---
 
-## Appendix: Paper Profiles on This Device
+## Appendix: Paper Profiles (Example)
 
 | Index | Name | Tray |
 |-------|------|------|
-| 11 | Offset 80 420x297 TEST | Tray1 (A3) |
-| 15 | novo Offset120grA4 210x297 | Tray2 (A4) |
+| 11 | Plain 80gsm A3 | Tray1 (A3) |
+| 15 | Coated 120gsm A4 | Tray2 (A4) |
 
 ## Appendix: Passwords
 
@@ -838,7 +908,7 @@ The printer exposes a standard IPP (Internet Printing Protocol) endpoint that su
 ### IPP Endpoint
 
 ```
-ipp://192.168.1.131:631/ipp
+ipp://PRINTER_IP:631/ipp
 ```
 
 ### Supported Formats
@@ -869,10 +939,10 @@ ipp://192.168.1.131:631/ipp
 
 ```bash
 # Basic print
-lp -h 192.168.1.131:631 -d ipp /path/to/document.pdf
+lp -h PRINTER_IP:631 -d ipp /path/to/document.pdf
 
 # With settings
-lp -h 192.168.1.131:631 -d ipp \
+lp -h PRINTER_IP:631 -d ipp \
   -n 3 \                          # 3 copies
   -o sides=two-sided-long-edge \  # duplex
   /path/to/document.pdf
@@ -881,7 +951,7 @@ lp -h 192.168.1.131:631 -d ipp \
 ### Print via ipptool
 
 ```bash
-ipptool -f /path/to/document.pdf ipp://192.168.1.131:631/ipp print-job.test
+ipptool -f /path/to/document.pdf ipp://PRINTER_IP:631/ipp print-job.test
 ```
 
 ### Print via curl (raw IPP)
@@ -985,7 +1055,7 @@ Flow:
 
 1. Extract PDF from `.icjx` file (Python script — `auto_print.py`)
 2. Read print settings from the `.icjx` metadata
-3. Send via IPP with settings: `lp -h 192.168.1.131:631 -d ipp -o sides=two-sided-long-edge file.pdf`
+3. Send via IPP with settings: `lp -h PRINTER_IP:631 -d ipp -o sides=two-sided-long-edge file.pdf`
 
 **Pros**: Standard protocol, works with any OS, simple command, no browser needed
 **Cons**: Limited IPP settings (no paper profile, no image shift, no booklet layout, copies limited to 1)
@@ -1002,7 +1072,7 @@ Flow:
 ### Option 4: Direct Socket Print (Port 9100)
 
 1. Send raw PDF or PostScript to port 9100
-2. `cat file.pdf | nc 192.168.1.131 9100`
+2. `cat file.pdf | nc PRINTER_IP 9100`
 
 **Pros**: Simplest possible, no authentication
 **Cons**: No control over print settings, uses printer defaults
@@ -1010,4 +1080,4 @@ Flow:
 ---
 
 *Last updated: 2026-03-12 (v2 — added jobRestore.fcgi, jobPrintAndUnlock.fcgi, auto_print.py)*
-*Generated from live API testing against AccurioPrint 2100 at 192.168.1.131:30083*
+*Generated from live API testing against AccurioPrint 2100*

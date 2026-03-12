@@ -22,16 +22,16 @@ git clone https://github.com/bulgariamitko/profiweb-auto-print.git
 cd profiweb-auto-print
 
 # Print an .icjx file (imports via ProfiWEB, preserves all settings)
-python3 auto_print.py order.icjx
+python3 auto_print.py --printer 10.0.0.50 order.icjx
 
 # Batch print all .icjx files in a folder
-python3 auto_print.py /path/to/orders/*.icjx
+python3 auto_print.py --printer 10.0.0.50 /path/to/orders/*.icjx
 
 # Print a PDF directly via IPP
-python3 auto_print.py document.pdf
+python3 auto_print.py --printer 10.0.0.50 document.pdf
 
 # Preview what would happen (no actual printing)
-python3 auto_print.py --dry-run *.icjx
+python3 auto_print.py --printer 10.0.0.50 --dry-run *.icjx
 ```
 
 ## How It Works
@@ -62,7 +62,7 @@ python3 auto_print.py [OPTIONS] FILE [FILE ...]
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--printer IP` | Printer IP address | `192.168.1.131` |
+| `--printer IP` | Printer IP address (required) | — |
 | `--mode {profiweb,ipp}` | Print mode | `profiweb` for .icjx, `ipp` for .pdf |
 | `--copies N` | Number of copies (ProfiWEB mode) | `1` |
 | `--no-delete` | Keep job in queue after printing (ProfiWEB) | Delete after print |
@@ -75,28 +75,25 @@ python3 auto_print.py [OPTIONS] FILE [FILE ...]
 
 ```bash
 # Print a single .icjx with all embedded settings
-python3 auto_print.py order.icjx
-
-# Print 3 copies
-python3 auto_print.py --copies 3 order.icjx
-
-# Keep job in queue after printing (don't delete)
-python3 auto_print.py --no-delete order.icjx
-
-# Batch print all .icjx files
-python3 auto_print.py /path/to/folder/*.icjx
-
-# Print PDF via IPP with duplex
-python3 auto_print.py --duplex document.pdf
-
-# Force PDF through ProfiWEB instead of IPP
-python3 auto_print.py --mode profiweb document.pdf
-
-# Use a different printer
 python3 auto_print.py --printer 10.0.0.50 order.icjx
 
+# Print 3 copies
+python3 auto_print.py --printer 10.0.0.50 --copies 3 order.icjx
+
+# Keep job in queue after printing (don't delete)
+python3 auto_print.py --printer 10.0.0.50 --no-delete order.icjx
+
+# Batch print all .icjx files
+python3 auto_print.py --printer 10.0.0.50 /path/to/folder/*.icjx
+
+# Print PDF via IPP with duplex
+python3 auto_print.py --printer 10.0.0.50 --duplex document.pdf
+
+# Force PDF through ProfiWEB instead of IPP
+python3 auto_print.py --printer 10.0.0.50 --mode profiweb document.pdf
+
 # Dry run — see what would happen
-python3 auto_print.py --dry-run *.icjx
+python3 auto_print.py --printer 10.0.0.50 --dry-run *.icjx
 ```
 
 ## The .icjx File Format

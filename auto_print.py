@@ -9,32 +9,28 @@ Two printing modes:
 
 Usage:
   # Print .icjx files via ProfiWEB (preserves all embedded settings)
-  python3 auto_print.py order.icjx
-  python3 auto_print.py *.icjx
+  python3 auto_print.py --printer 10.0.0.50 order.icjx
+
+  # Batch print all .icjx files
+  python3 auto_print.py --printer 10.0.0.50 *.icjx
 
   # Print a PDF via IPP
-  python3 auto_print.py document.pdf
+  python3 auto_print.py --printer 10.0.0.50 document.pdf
 
   # Print PDF via ProfiWEB instead of IPP
-  python3 auto_print.py --mode profiweb document.pdf
+  python3 auto_print.py --printer 10.0.0.50 --mode profiweb document.pdf
 
   # Print .icjx via IPP (extracts PDF, loses some settings)
-  python3 auto_print.py --mode ipp order.icjx
-
-  # Batch print a folder of .icjx files
-  python3 auto_print.py /path/to/folder/*.icjx
+  python3 auto_print.py --printer 10.0.0.50 --mode ipp order.icjx
 
   # Set copies (ProfiWEB mode)
-  python3 auto_print.py --copies 3 order.icjx
+  python3 auto_print.py --printer 10.0.0.50 --copies 3 order.icjx
 
-  # Delete job after printing (ProfiWEB, default: true)
-  python3 auto_print.py --no-delete order.icjx
+  # Keep job in queue after printing
+  python3 auto_print.py --printer 10.0.0.50 --no-delete order.icjx
 
   # Dry run
-  python3 auto_print.py --dry-run *.icjx
-
-  # Specify printer IP
-  python3 auto_print.py --printer 192.168.1.131 document.pdf
+  python3 auto_print.py --printer 10.0.0.50 --dry-run *.icjx
 """
 
 import argparse
@@ -498,7 +494,7 @@ def icjx_settings_to_ipp(settings):
 
 # ─── IPP Print Function ──────────────────────────────────────────────────
 
-def ipp_print(filepath, printer_host="192.168.1.131", printer_port=631,
+def ipp_print(filepath, printer_host=None, printer_port=631,
               printer_path="/ipp", duplex=False, dry_run=False):
     """Print a file via IPP. For .icjx, extracts PDF first."""
     filepath = os.path.abspath(filepath)
@@ -581,20 +577,19 @@ Modes:
 Default: .icjx files use 'profiweb', .pdf files use 'ipp'
 
 Examples:
-  %(prog)s order.icjx                      # Import + print .icjx (ProfiWEB)
-  %(prog)s *.icjx                           # Batch print all .icjx files
-  %(prog)s document.pdf                     # Print PDF via IPP
-  %(prog)s --mode profiweb document.pdf    # Print PDF via ProfiWEB
-  %(prog)s --copies 3 order.icjx           # 3 copies via ProfiWEB
-  %(prog)s --no-delete order.icjx          # Keep job after printing
-  %(prog)s --duplex document.pdf           # Duplex via IPP
-  %(prog)s --dry-run *.icjx               # Preview what would be printed
-  %(prog)s --printer 10.0.0.50 doc.pdf    # Use different printer IP
+  %(prog)s --printer 10.0.0.50 order.icjx                 # Import + print .icjx
+  %(prog)s --printer 10.0.0.50 *.icjx                    # Batch print all .icjx
+  %(prog)s --printer 10.0.0.50 document.pdf              # Print PDF via IPP
+  %(prog)s --printer 10.0.0.50 --mode profiweb doc.pdf   # PDF via ProfiWEB
+  %(prog)s --printer 10.0.0.50 --copies 3 order.icjx     # 3 copies
+  %(prog)s --printer 10.0.0.50 --no-delete order.icjx    # Keep job after print
+  %(prog)s --printer 10.0.0.50 --duplex document.pdf     # Duplex via IPP
+  %(prog)s --printer 10.0.0.50 --dry-run *.icjx          # Preview only
         """
     )
     parser.add_argument('files', nargs='+', help='PDF or .icjx files to print')
-    parser.add_argument('--printer', default='192.168.1.131',
-                        help='Printer IP address (default: 192.168.1.131)')
+    parser.add_argument('--printer', required=True,
+                        help='Printer IP address (e.g., 10.0.0.50)')
     parser.add_argument('--mode', choices=['profiweb', 'ipp'],
                         help='Print mode (default: profiweb for .icjx, ipp for .pdf)')
     parser.add_argument('--copies', type=int, default=1,

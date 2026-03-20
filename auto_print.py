@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
-Auto-Print Script for Konica Minolta AccurioPrint 2100
-======================================================
+Auto-Print Script for Konica Minolta Printers (ProfiWEB)
+========================================================
+
+Tested on AccurioPrint 2100 (B&W) and AccurioPrint C4065 (Color).
+Works with any Konica Minolta printer running AccurioPro ProfiWEB.
 
 Two printing modes:
   1. ProfiWEB API (default for .icjx) — imports via jobRestore.fcgi, preserves ALL settings
@@ -10,24 +13,19 @@ Two printing modes:
 Usage:
   # Print .icjx files via ProfiWEB (preserves all embedded settings)
   python3 auto_print.py --printer 10.0.0.50 order.icjx
-
-  # Batch print all .icjx files
   python3 auto_print.py --printer 10.0.0.50 *.icjx
+
+  # Check what paper is loaded in the trays
+  python3 auto_print.py --printer 10.0.0.51 --trays
+
+  # Print only if 150g paper is loaded somewhere
+  python3 auto_print.py --printer 10.0.0.51 --paper-weight 150 order.icjx
 
   # Print a PDF via IPP
   python3 auto_print.py --printer 10.0.0.50 document.pdf
 
-  # Print PDF via ProfiWEB instead of IPP
-  python3 auto_print.py --printer 10.0.0.50 --mode profiweb document.pdf
-
-  # Print .icjx via IPP (extracts PDF, loses some settings)
-  python3 auto_print.py --printer 10.0.0.50 --mode ipp order.icjx
-
-  # Set copies (ProfiWEB mode)
-  python3 auto_print.py --printer 10.0.0.50 --copies 3 order.icjx
-
-  # Keep job in queue after printing
-  python3 auto_print.py --printer 10.0.0.50 --no-delete order.icjx
+  # Batch print a folder of .icjx files
+  python3 auto_print.py --printer 10.0.0.50 /path/to/folder/*.icjx
 
   # Dry run
   python3 auto_print.py --printer 10.0.0.50 --dry-run *.icjx
@@ -39,6 +37,7 @@ import http.client
 import io
 import json
 import os
+import re
 import struct
 import subprocess
 import sys
@@ -46,6 +45,54 @@ import tarfile
 import time
 import urllib.parse
 import configparser
+
+
+# ─── Paper Weight Mapping ─────────────────────────────────────────────────
+
+# Konica Minolta MediaWeightAuto → approximate g/m² ranges
+WEIGHT_RANGES = {
+    'Thin':   (52, 59),
+    'Thick1': (52, 59),
+    'Thick2': (60, 90),
+    'Thick3': (91, 120),
+    'Thick4': (121, 157),
+    'Thick5': (158, 209),
+    'Thick6': (210, 256),
+    'Thick7': (257, 300),
+    'Thick8': (301, 350),
+}
+
+
+def parse_weight_from_profile(profile_name):
+    """Extract paper weight in g/m² from a paper profile name.
+
+    Examples:
+      '300 mat 31/45'           → 300
+      '80 gr. ofset A4'         → 80
+      'ofset 80 gr. A3'         → 80
+      'novo Offset120grA4'      → 120
+      '150 mat A4'              → 150
+      'Offset 80 420x297 TEST'  → 80
+    """
+    # Match a number that's likely a weight (not a dimension like 420x297)
+    # Look for patterns: "NNN gr", "NNNgr", "NNN mat", or standalone number before text
+    m = re.search(r'(\d{2,3})\s*(?:gr|g/m|mat|gsm)', profile_name, re.IGNORECASE)
+    if m:
+        return int(m.group(1))
+    # Try standalone number (2-3 digits) not part of a dimension like 420x297
+    for m in re.finditer(r'(?<!\d)(\d{2,3})(?!\d*x\d)', profile_name):
+        weight = int(m.group(1))
+        if 50 <= weight <= 400:
+            return weight
+    return None
+
+
+def weight_in_range(target_weight, media_weight_auto):
+    """Check if a target weight (g/m²) falls within a MediaWeightAuto range."""
+    r = WEIGHT_RANGES.get(media_weight_auto)
+    if not r:
+        return False
+    return r[0] <= target_weight <= r[1]
 
 
 # ─── ProfiWEB API ─────────────────────────────────────────────────────────
@@ -176,12 +223,112 @@ class ProfiWebClient:
         })
         return result.get('result', {}).get('type') == 'ok'
 
+    def get_device_info(self):
+        """Get full device information including trays, toner, status."""
+        return self._curl('GET', 'deviceInfo.fcgi')
 
-def profiweb_print(filepath, host, port=30083, copies=1, delete_after=True, dry_run=False):
+    def get_trays(self):
+        """Get parsed tray information with paper details.
+
+        Returns list of dicts with keys:
+          tray_id, paper_size, profile_name, weight_gsm, weight_class,
+          media_type, paper_amount, feed_dir, custom_width, custom_height
+        """
+        info = self.get_device_info()
+        trays = []
+        for t in info.get('printerInformation', {}).get('inputTrays', []):
+            profile = t.get('MainPaperProfileName', '')
+            weight_class = t.get('MediaWeightAuto', '')
+            weight_gsm = parse_weight_from_profile(profile)
+            if weight_gsm is None:
+                r = WEIGHT_RANGES.get(weight_class)
+                if r:
+                    weight_gsm = (r[0] + r[1]) // 2  # midpoint estimate
+            trays.append({
+                'tray_id': t.get('trayId', '?'),
+                'paper_size': t.get('TargetPaperSize', '?'),
+                'profile_name': profile,
+                'weight_gsm': weight_gsm,
+                'weight_class': weight_class,
+                'media_type': t.get('MediaTypeAuto', '?'),
+                'paper_amount': t.get('paperAmount', 0),
+                'feed_dir': t.get('FeedDir', '?'),
+                'custom_width': t.get('CustomTargetPaperSizeWidth', 0),
+                'custom_height': t.get('CustomTargetPaperSizeHeight', 0),
+            })
+        return trays, info
+
+
+def show_trays(host, port=30083):
+    """Connect to printer and display tray contents."""
+    client = ProfiWebClient(host, port)
+    client.register()
+    client.login()
+
+    trays, info = client.get_trays()
+    pi = info.get('printerInformation', {})
+    device_name = pi.get('deviceName', 'Unknown')
+    toner = pi.get('toner', [])
+    status_list = pi.get('printerStatus', [])
+
+    print(f"\nPrinter: {device_name}")
+    print(f"Address: {host}:{port}")
+
+    if status_list:
+        for s in status_list:
+            level = s.get('level', '')
+            icon = '!!' if level == 'Error' else '!' if level == 'Warning' else ' '
+            print(f"  [{icon}] {s.get('main', '')} - {s.get('sub', '')}")
+
+    if toner:
+        toner_str = ', '.join(f"{t['name']}:{t['amount']}%" for t in toner)
+        print(f"  Toner: {toner_str}")
+
+    print(f"\nTrays:")
+    print(f"  {'Tray':<8} {'Size':<10} {'Weight':<8} {'Type':<12} {'Paper':<8} {'Profile'}")
+    print(f"  {'─'*8} {'─'*10} {'─'*8} {'─'*12} {'─'*8} {'─'*30}")
+    for t in trays:
+        size = t['paper_size']
+        if size == 'Custom' and t['custom_width'] and t['custom_height']:
+            w_mm = t['custom_width'] / 10000
+            h_mm = t['custom_height'] / 10000
+            size = f"{w_mm:.0f}x{h_mm:.0f}mm"
+        weight = f"{t['weight_gsm']}g" if t['weight_gsm'] else t['weight_class']
+        amount = f"{t['paper_amount']}%" if t['paper_amount'] > 0 else 'empty'
+        print(f"  {t['tray_id']:<8} {size:<10} {weight:<8} {t['media_type']:<12} {amount:<8} {t['profile_name']}")
+
+    return trays
+
+
+def check_paper_weight(trays, required_weight, tolerance=10):
+    """Check if any tray has paper matching the required weight (g/m²).
+
+    Args:
+        trays: List of tray dicts from get_trays()
+        required_weight: Required paper weight in g/m²
+        tolerance: Acceptable deviation in g/m² (default: 10)
+
+    Returns:
+        (matching_trays, all_trays) — matching_trays is list of trays that match
+    """
+    matching = []
+    for t in trays:
+        if t['weight_gsm'] is None:
+            continue
+        if abs(t['weight_gsm'] - required_weight) <= tolerance:
+            matching.append(t)
+        elif weight_in_range(required_weight, t['weight_class']):
+            matching.append(t)
+    return matching
+
+
+def profiweb_print(filepath, host, port=30083, copies=1, delete_after=True, dry_run=False, paper_weight=None):
     """
     Print a file via ProfiWEB API.
     - .icjx files: imported via jobRestore.fcgi (preserves all embedded settings)
     - .pdf files: uploaded via jobSubmit.fcgi
+
+    If paper_weight is specified, checks trays before printing.
 
     Returns dict with success status.
     """
@@ -202,6 +349,27 @@ def profiweb_print(filepath, host, port=30083, copies=1, delete_after=True, dry_
     client.register()
     client.login()
     print(f"  Session established")
+
+    # Step 1b: Check paper weight if requested
+    if paper_weight:
+        print(f"  Checking trays for {paper_weight}g paper...")
+        trays, info = client.get_trays()
+        device_name = info.get('printerInformation', {}).get('deviceName', 'Unknown')
+        print(f"  Printer: {device_name}")
+        matching = check_paper_weight(trays, paper_weight)
+        if matching:
+            tray_names = ', '.join(f"{t['tray_id']} ({t['profile_name']}, ~{t['weight_gsm']}g)" for t in matching)
+            print(f"  Paper match found: {tray_names}")
+        else:
+            loaded = ', '.join(
+                f"{t['tray_id']}: {t['profile_name']} (~{t['weight_gsm']}g)" if t['weight_gsm']
+                else f"{t['tray_id']}: {t['profile_name']} ({t['weight_class']})"
+                for t in trays
+            )
+            return {
+                "success": False,
+                "error": f"No tray has {paper_weight}g paper. Loaded: {loaded}"
+            }
 
     # Step 2: Get current job list (to detect the new job after upload)
     jobs_before = {j['jobId'] for j in client.list_jobs()}
@@ -225,22 +393,31 @@ def profiweb_print(filepath, host, port=30083, copies=1, delete_after=True, dry_
 
     print(f"  Upload OK")
 
-    # Step 4: Find the new job
-    time.sleep(1)
-    jobs_after = client.list_jobs()
+    # Step 4: Find the new job (retry with increasing wait)
     new_job = None
-    for j in jobs_after:
-        if j['jobId'] not in jobs_before:
-            new_job = j
-            break
+    name_match = os.path.splitext(filename)[0] if ext == '.icjx' else filename
+    name_prefix = name_match.split('.')[0].split(' ')[0]  # e.g. "10438" from filename
 
-    if not new_job:
-        # Fall back: find by name match (latest unedited)
-        for j in reversed(jobs_after):
-            name_match = os.path.splitext(filename)[0] if ext == '.icjx' else filename
-            if name_match.split('.')[0] in j.get('name', ''):
+    for attempt in range(8):
+        time.sleep(3 + attempt * 2)
+        jobs_after = client.list_jobs()
+
+        # Try by new job ID
+        for j in jobs_after:
+            if j['jobId'] not in jobs_before:
                 new_job = j
                 break
+
+        # Fall back: find by name match (latest unedited)
+        if not new_job:
+            for j in reversed(jobs_after):
+                if name_prefix in j.get('name', '') and j.get('status') == 'unedited':
+                    new_job = j
+                    break
+
+        if new_job:
+            break
+        print(f"  Waiting for job to appear (attempt {attempt + 1}/8)...")
 
     if not new_job:
         return {"success": False, "error": "Could not find imported job in Hold queue"}
@@ -566,7 +743,7 @@ def ipp_print(filepath, printer_host=None, printer_port=631,
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Auto-print PDF and .icjx files to Konica Minolta AccurioPrint 2100",
+        description="Auto-print PDF and .icjx files to Konica Minolta printers via ProfiWEB",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Modes:
@@ -577,19 +754,21 @@ Modes:
 Default: .icjx files use 'profiweb', .pdf files use 'ipp'
 
 Examples:
-  %(prog)s --printer 10.0.0.50 order.icjx                 # Import + print .icjx
-  %(prog)s --printer 10.0.0.50 *.icjx                    # Batch print all .icjx
-  %(prog)s --printer 10.0.0.50 document.pdf              # Print PDF via IPP
-  %(prog)s --printer 10.0.0.50 --mode profiweb doc.pdf   # PDF via ProfiWEB
-  %(prog)s --printer 10.0.0.50 --copies 3 order.icjx     # 3 copies
-  %(prog)s --printer 10.0.0.50 --no-delete order.icjx    # Keep job after print
-  %(prog)s --printer 10.0.0.50 --duplex document.pdf     # Duplex via IPP
-  %(prog)s --printer 10.0.0.50 --dry-run *.icjx          # Preview only
+  %(prog)s --printer 10.0.0.50 --trays             # Show loaded paper
+  %(prog)s --printer 10.0.0.50 order.icjx           # Import + print .icjx
+  %(prog)s --printer 10.0.0.50 --paper-weight 150 order.icjx  # Check paper first
+  %(prog)s --printer 10.0.0.50 *.icjx               # Batch print all .icjx
+  %(prog)s --printer 10.0.0.50 document.pdf          # Print PDF via IPP
+  %(prog)s --printer 10.0.0.50 --dry-run *.icjx     # Preview only
         """
     )
-    parser.add_argument('files', nargs='+', help='PDF or .icjx files to print')
+    parser.add_argument('files', nargs='*', help='PDF or .icjx files to print')
     parser.add_argument('--printer', required=True,
-                        help='Printer IP address (e.g., 10.0.0.50)')
+                        help='Printer IP address (required)')
+    parser.add_argument('--trays', action='store_true',
+                        help='Show paper loaded in each tray and exit')
+    parser.add_argument('--paper-weight', type=int, metavar='GRAMS',
+                        help='Required paper weight in g/m². Aborts if no tray matches.')
     parser.add_argument('--mode', choices=['profiweb', 'ipp'],
                         help='Print mode (default: profiweb for .icjx, ipp for .pdf)')
     parser.add_argument('--copies', type=int, default=1,
@@ -606,6 +785,14 @@ Examples:
                         help='Show what would be printed without sending')
 
     args = parser.parse_args()
+
+    # --trays mode: just show tray info and exit
+    if args.trays:
+        show_trays(args.printer, args.profiweb_port)
+        return 0
+
+    if not args.files:
+        parser.error('No files specified. Use --trays to check paper, or provide files to print.')
 
     results = []
     for filepath in args.files:
@@ -628,7 +815,8 @@ Examples:
                 port=args.profiweb_port,
                 copies=args.copies,
                 delete_after=not args.no_delete,
-                dry_run=args.dry_run
+                dry_run=args.dry_run,
+                paper_weight=args.paper_weight
             )
         else:
             result = ipp_print(

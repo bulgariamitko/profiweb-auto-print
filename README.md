@@ -8,9 +8,13 @@ Also supports direct PDF printing via IPP.
 
 ## Supported Hardware
 
-Tested on **AccurioPrint 2100** with ProfiWEB 1.0PW-4030. Should work with any Konica Minolta printer running AccurioPro Print Manager / ProfiWEB, including:
+Tested on:
+- **AccurioPrint 2100** (B&W) with ProfiWEB 1.0PW-4030
+- **AccurioPrint C4065** (Color) with ProfiWEB 6.0PWRW-1238
 
-- AccurioPrint 2100
+Should work with any Konica Minolta printer running AccurioPro Print Manager / ProfiWEB, including:
+
+- AccurioPrint 2100, C4065
 - AccurioPress C759 / C754e / C654e
 - Other models with the ProfiWEB web interface (port 30083)
 
@@ -26,6 +30,12 @@ python3 auto_print.py --printer 10.0.0.50 order.icjx
 
 # Batch print all .icjx files in a folder
 python3 auto_print.py --printer 10.0.0.50 /path/to/orders/*.icjx
+
+# Check what paper is loaded in each tray
+python3 auto_print.py --printer 10.0.0.50 --trays
+
+# Print only if 150g paper is loaded
+python3 auto_print.py --printer 10.0.0.50 --paper-weight 150 order.icjx
 
 # Print a PDF directly via IPP
 python3 auto_print.py --printer 10.0.0.50 document.pdf
@@ -74,6 +84,8 @@ python3 auto_print.py [OPTIONS] FILE [FILE ...]
 | Option | Description | Default |
 |--------|-------------|---------|
 | `--printer IP` | Printer IP address (required) | — |
+| `--trays` | Show paper loaded in each tray and exit | — |
+| `--paper-weight N` | Required paper weight (g/m²). Aborts if no tray matches | — |
 | `--mode {profiweb,ipp}` | Print mode | `profiweb` for .icjx, `ipp` for .pdf |
 | `--copies N` | Number of copies (ProfiWEB mode) | `1` |
 | `--no-delete` | Keep job in queue after printing (ProfiWEB) | Delete after print |

@@ -2,7 +2,7 @@
 
 **Device**: KONICA MINOLTA AccurioPrint 2100
 **Web Interface**: AccurioPro Print Manager (ProfiWEB)
-**Base URL**: `http://PRINTER_IP:30083`
+**Base URL**: `http://192.168.1.131:30083`
 **Software Version**: 1.0PW-4030
 
 ---
@@ -29,8 +29,8 @@
 The AccurioPro ProfiWEB interface is an AngularJS 1.8.2 web application that communicates with the print server via `.fcgi` endpoints. All API calls use standard HTTP GET/POST with URL-encoded form data. Responses are JSON.
 
 The frontend JavaScript is bundled in:
-- `http://PRINTER_IP:30083/bundle.js` (3.8MB, minified)
-- `http://PRINTER_IP:30083/build/loader.js`
+- `http://192.168.1.131:30083/bundle.js` (3.8MB, minified)
+- `http://192.168.1.131:30083/build/loader.js`
 
 The internal AngularJS module is called `"profiweb"` and uses a custom `fcgiSrv` service that wraps `$http`.
 
@@ -56,7 +56,7 @@ GET /register.fcgi?sessionId=-1&viewId=-1&ts={timestamp}
 **Response:**
 ```json
 {
-  "sessionId": "xAbCdEfGhIjKlMnOpQrStUvWxYz",
+  "sessionId": "stvGaOk77Lwn1pp8NpKMPMSiOHWA",
   "viewId": 0
 }
 ```
@@ -288,7 +288,7 @@ The `jobRestore.fcgi` endpoint imports `.icjx` files directly into the Hold queu
 ```bash
 SESSION="your-session-id"
 
-curl -X POST "http://PRINTER_IP:30083/jobRestore.fcgi" \
+curl -X POST "http://192.168.1.131:30083/jobRestore.fcgi" \
   -H "Content-Type: multipart/form-data" \
   -F "sessionId=$SESSION" \
   -F "viewId=0" \
@@ -310,7 +310,7 @@ Content-Disposition: form-data; name="viewId"\r\n
 \r\n
 0\r\n
 ------WebKitFormBoundary...\r\n
-Content-Disposition: form-data; name="file"; filename="sample-document.pdf 20260101120000.icjx"\r\n
+Content-Disposition: form-data; name="file"; filename="Proba booklet.pdf 20260312114633.icjx"\r\n
 Content-Type: application/octet-stream\r\n
 \r\n
 {binary file data}\r\n
@@ -347,7 +347,7 @@ Content-Type: application/octet-stream\r\n
 ### CONFIRMED WORKING - Upload to Hold Queue
 
 ```bash
-curl -X POST "http://PRINTER_IP:30083/jobSubmit.fcgi" \
+curl -X POST "http://192.168.1.131:30083/jobSubmit.fcgi" \
   -F "file=@/path/to/document.pdf;filename=document.pdf" \
   -F "sessionId={sessionId}" \
   -F "viewId=0" \
@@ -375,7 +375,7 @@ curl -X POST "http://PRINTER_IP:30083/jobSubmit.fcgi" \
 Used for non-job uploads (tone curves, localization files, etc.):
 
 ```bash
-curl -X POST "http://PRINTER_IP:30083/createDownload.fcgi" \
+curl -X POST "http://192.168.1.131:30083/createDownload.fcgi" \
   -F "file=@/path/to/file" \
   -F "contentType=application/pdf" \
   -F "filename=myfile.pdf"
@@ -404,17 +404,17 @@ GET /jobList.fcgi?containerId=268435441&sessionId={sid}&viewId=0&ts={ts}
   "jobLists": [{
     "containerId": 268435441,
     "jobs": [{
-      "jobId": 12345,
-      "name": "sample-document.pdf",
+      "jobId": 20750,
+      "name": "az chovek sam booklet.pdf",
       "owner": "",
       "pages": 14,
       "jobType": "print",
       "status": "edited",
       "pdl": "pdf",
       "pdlFileSize": 632127,
-      "datePrintEnd": 1700000045,
-      "dateModified": 1700000000,
-      "dateStored": 1699999800,
+      "datePrintEnd": 1773235245,
+      "dateModified": 1773235200,
+      "dateStored": 1773235000,
       "isPrinted": "True",
       "notRiped": "False",
       "activeToHold": "False",
@@ -583,14 +583,14 @@ GET /containerList.fcgi?sessionId={sid}&viewId=0&ts={ts}
 | History | 268435444 | finished | Completed jobs (max 200) |
 | Editable Active | 268435445 | activeHold | Active jobs that can be edited |
 
-### HDD Sub-Structure (example)
+### HDD Sub-Structure (on this device)
 ```
 HDD (268369922)
 └── Public (268369938)
-    └── MyFolder (65554) - stored jobs
+    └── izdavam (65554) - 44 jobs stored
 ```
 
-### Storage Info (example)
+### Storage Info
 - Copy/RIPed Data: 324 GB of 590 GB Free
 - Pre-RIP Data/Scan/Form: 153 GB of 166 GB Free
 
@@ -608,17 +608,17 @@ GET /deviceInfo.fcgi?sessionId={sid}&viewId=0&ts={ts}
   "printerInformation": {
     "deviceName": "KONICA MINOLTA AccurioPrint 2100",
     "printerName": "2100",
-    "macAddress": "00:11:AA:BB:CC:DD",
-    "ipV4Address": "PRINTER_IP",
+    "macAddress": "00:50:AA:2C:DA:08",
+    "ipV4Address": "192.168.1.131",
     "administratorMode": false,
     "hotFolderEnabled": true
   },
   "toner": [{"name": "black", "level": "ready", "amount": 90}],
   "inputTrays": [
     {"trayId": "Tray1", "TargetPaperSize": "A3", "paperAmount": 2,
-     "MainPaperProfileName": "Plain 80gsm A3", "FeedDir": "ShortEdge"},
+     "MainPaperProfileName": "Offset 80 420x297 TEST", "FeedDir": "ShortEdge"},
     {"trayId": "Tray2", "TargetPaperSize": "A4", "paperAmount": 5,
-     "MainPaperProfileName": "Coated 120gsm A4", "FeedDir": "LongEdge"}
+     "MainPaperProfileName": "novo Offset120grA4 210x297", "FeedDir": "LongEdge"}
   ]
 }
 ```
@@ -632,8 +632,8 @@ GET /productionData.fcgi?sessionId={sid}&viewId=0&ts={ts}
 Returns current printing status:
 ```json
 {
-  "jobId": 12350,
-  "jobName": "brochure-A3.pdf",
+  "jobId": 22604,
+  "jobName": "10660A3 Milen.pdf",
   "printedCopies": 0,
   "printedPages": 202,
   "totalCopies": 3,
@@ -662,7 +662,7 @@ The `.icjx` file is a **Konica Minolta AccurioPro Print Manager proprietary form
     │   ├── Bytes 0-3: 0xFFFFFFFF  (signature)
     │   ├── Job name (repeated 3x)
     │   ├── "_SAMEASIMAGE" string
-    │   ├── IP address of source printer (e.g., "10.0.0.100")
+    │   ├── IP address of source printer (e.g., "192.168.1.238")
     │   └── Various binary settings
     ├── [gzip-compressed tar]       (at offset ~41056, starts with 0x1F8B)
     │   ├── {jobid}.pre             (THE ACTUAL PDF FILE - %PDF-1.4)
@@ -720,7 +720,7 @@ for member in inner_tar.getmembers():
 
 **From Python http.client**: Returns `AioJobNoExists` or `InternalError`.
 
-**From browser**: Successfully prints jobs (confirmed working with multiple test jobs).
+**From browser**: Successfully prints jobs. Confirmed working with jobs 100022612, 100022626, 100022633.
 
 **Not needed for basic printing**: Use `jobPrintAndUnlock.fcgi` instead (see above), which works from both curl and Python.
 
@@ -762,14 +762,14 @@ jobId={id}&containerId={cid}&printMode=Print&deleteJob=true&numOfCopies=1&isLock
 
 ```bash
 # 1. Register session
-SESSION=$(curl -s "http://PRINTER_IP:30083/register.fcgi?sessionId=-1&viewId=-1&ts=$(date +%s)000" | python3 -c "import sys,json; print(json.load(sys.stdin)['sessionId'])")
+SESSION=$(curl -s "http://192.168.1.131:30083/register.fcgi?sessionId=-1&viewId=-1&ts=$(date +%s)000" | python3 -c "import sys,json; print(json.load(sys.stdin)['sessionId'])")
 
 # 2. Login as Operator
-curl -s -X POST "http://PRINTER_IP:30083/sessionLogin.fcgi" \
+curl -s -X POST "http://192.168.1.131:30083/sessionLogin.fcgi" \
   -d "notauthuser=Operator&sessionId=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$SESSION'))")&viewId=0&ts=$(date +%s)000"
 
 # 3. Upload PDF to Hold queue
-curl -s -X POST "http://PRINTER_IP:30083/jobSubmit.fcgi" \
+curl -s -X POST "http://192.168.1.131:30083/jobSubmit.fcgi" \
   -F "file=@/path/to/document.pdf;filename=document.pdf" \
   --form-string "sessionId=$SESSION" \
   -F "viewId=0" \
@@ -777,118 +777,48 @@ curl -s -X POST "http://PRINTER_IP:30083/jobSubmit.fcgi" \
   -F "hold=true"
 
 # 4. List jobs in Hold queue
-curl -s "http://PRINTER_IP:30083/jobList.fcgi?containerId=268435441&viewId=0"
+curl -s "http://192.168.1.131:30083/jobList.fcgi?containerId=268435441&viewId=0"
 
 # 5. Get device status
-curl -s "http://PRINTER_IP:30083/deviceInfo.fcgi?viewId=0"
+curl -s "http://192.168.1.131:30083/deviceInfo.fcgi?viewId=0"
 
 # 6. Check current print production
-curl -s "http://PRINTER_IP:30083/productionData.fcgi?viewId=0"
+curl -s "http://192.168.1.131:30083/productionData.fcgi?viewId=0"
 ```
 
 ### Lock, Get Details, Unlock
 
 ```bash
-JOB_ID=12345
+JOB_ID=20750
 CID=268435441
 
 # Lock
-curl -s -X POST "http://PRINTER_IP:30083/jobLock.fcgi" \
+curl -s -X POST "http://192.168.1.131:30083/jobLock.fcgi" \
   -d "action=lock&jobId=$JOB_ID&containerId=$CID&viewId=0"
 
 # Get details
-curl -s "http://PRINTER_IP:30083/jobDetails.fcgi?jobId=$JOB_ID&containerId=$CID&viewId=0"
+curl -s "http://192.168.1.131:30083/jobDetails.fcgi?jobId=$JOB_ID&containerId=$CID&viewId=0"
 
 # Unlock
-curl -s -X POST "http://PRINTER_IP:30083/jobLock.fcgi" \
+curl -s -X POST "http://192.168.1.131:30083/jobLock.fcgi" \
   -d "action=unlock&jobId=$JOB_ID&containerId=$CID&viewId=0"
 ```
 
 ### Delete a Job
 
 ```bash
-curl -s -X POST "http://PRINTER_IP:30083/jobDelete.fcgi" \
-  -d "jobId=12345&containerId=268435441&viewId=0"
+curl -s -X POST "http://192.168.1.131:30083/jobDelete.fcgi" \
+  -d "jobId=100022612&containerId=268435441&viewId=0"
 ```
-
-### Complete .icjx Import → Print Workflow (CONFIRMED WORKING)
-
-This is the full end-to-end workflow for importing and printing an `.icjx` file:
-
-```bash
-PRINTER="10.0.0.50"  # <-- Replace with your printer's IP
-ICJX_FILE="/path/to/job.icjx"
-
-# 1. Register session
-SESSION=$(curl -s "http://$PRINTER:30083/register.fcgi?sessionId=-1&viewId=-1&ts=$(date +%s)000" \
-  | python3 -c "import sys,json; print(json.load(sys.stdin)['sessionId'])")
-echo "Session: $SESSION"
-
-# 2. Login as Operator
-curl -s -X POST "http://$PRINTER:30083/sessionLogin.fcgi" \
-  --data-urlencode "notauthuser=Operator" \
-  --data-urlencode "sessionId=$SESSION" \
-  -d "viewId=0&ts=$(date +%s)000"
-
-# 3. Import .icjx file (preserves ALL embedded print settings)
-curl -s -X POST "http://$PRINTER:30083/jobRestore.fcgi" \
-  -F "file=@${ICJX_FILE};type=application/octet-stream" \
-  --form-string "sessionId=$SESSION" \
-  -F "viewId=0"
-# Response: {"result":{"type":"ok","details":[]}}
-
-# 4. Find the imported job (latest in Hold queue)
-JOB_ID=$(curl -s "http://$PRINTER:30083/jobList.fcgi?containerId=268435441&viewId=0&ts=$(date +%s)000" \
-  | python3 -c "
-import sys, json
-jobs = json.load(sys.stdin)['jobLists'][0]['jobs']
-print(jobs[-1]['jobId'])  # Latest job
-")
-echo "Job ID: $JOB_ID"
-
-# 5. Lock the job
-curl -s -X POST "http://$PRINTER:30083/jobLock.fcgi" \
-  -d "action=lock&jobId=$JOB_ID&containerId=268435441&viewId=0&ts=$(date +%s)000" \
-  --data-urlencode "sessionId=$SESSION"
-# Response: {"result":{"type":"ok","details":[]}}
-
-# 6. Print and unlock (deleteJob=true removes it after printing)
-curl -s -X POST "http://$PRINTER:30083/jobPrintAndUnlock.fcgi" \
-  -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d "jobId=$JOB_ID&containerId=268435441&printMode=Print&deleteJob=true&numOfCopies=1&isLocked=true&viewId=0&ts=$(date +%s)000" \
-  --data-urlencode "sessionId=$SESSION"
-# Response: {"result":{"type":"ok","details":[]}}
-```
-
-### Print a Locked Job (jobPrintAndUnlock.fcgi)
-
-```bash
-# All parameters are required
-curl -s -X POST "http://PRINTER_IP:30083/jobPrintAndUnlock.fcgi" \
-  -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d "jobId=JOB_ID&containerId=268435441&printMode=Print&deleteJob=true&numOfCopies=1&isLocked=true&viewId=0&ts=$(date +%s)000" \
-  --data-urlencode "sessionId=YOUR_SESSION"
-```
-
-**Parameters:**
-- `jobId` — the job ID (required)
-- `containerId` — container where the job is (268435441 = Hold)
-- `printMode` — `Print` (required)
-- `deleteJob` — `true` to delete after printing, `false` to keep
-- `numOfCopies` — number of copies (overrides the job's NumCopies setting)
-- `isLocked` — must be `true` (job must be locked first via jobLock.fcgi)
-- `sessionId` — the session that locked the job
-- `viewId` — usually `0`
-- `ts` — timestamp in milliseconds
 
 ---
 
-## Appendix: Paper Profiles (Example)
+## Appendix: Paper Profiles on This Device
 
 | Index | Name | Tray |
 |-------|------|------|
-| 11 | Plain 80gsm A3 | Tray1 (A3) |
-| 15 | Coated 120gsm A4 | Tray2 (A4) |
+| 11 | Offset 80 420x297 TEST | Tray1 (A3) |
+| 15 | novo Offset120grA4 210x297 | Tray2 (A4) |
 
 ## Appendix: Passwords
 
@@ -908,7 +838,7 @@ The printer exposes a standard IPP (Internet Printing Protocol) endpoint that su
 ### IPP Endpoint
 
 ```
-ipp://PRINTER_IP:631/ipp
+ipp://192.168.1.131:631/ipp
 ```
 
 ### Supported Formats
@@ -939,10 +869,10 @@ ipp://PRINTER_IP:631/ipp
 
 ```bash
 # Basic print
-lp -h PRINTER_IP:631 -d ipp /path/to/document.pdf
+lp -h 192.168.1.131:631 -d ipp /path/to/document.pdf
 
 # With settings
-lp -h PRINTER_IP:631 -d ipp \
+lp -h 192.168.1.131:631 -d ipp \
   -n 3 \                          # 3 copies
   -o sides=two-sided-long-edge \  # duplex
   /path/to/document.pdf
@@ -951,7 +881,7 @@ lp -h PRINTER_IP:631 -d ipp \
 ### Print via ipptool
 
 ```bash
-ipptool -f /path/to/document.pdf ipp://PRINTER_IP:631/ipp print-job.test
+ipptool -f /path/to/document.pdf ipp://192.168.1.131:631/ipp print-job.test
 ```
 
 ### Print via curl (raw IPP)
@@ -1055,7 +985,7 @@ Flow:
 
 1. Extract PDF from `.icjx` file (Python script — `auto_print.py`)
 2. Read print settings from the `.icjx` metadata
-3. Send via IPP with settings: `lp -h PRINTER_IP:631 -d ipp -o sides=two-sided-long-edge file.pdf`
+3. Send via IPP with settings: `lp -h 192.168.1.131:631 -d ipp -o sides=two-sided-long-edge file.pdf`
 
 **Pros**: Standard protocol, works with any OS, simple command, no browser needed
 **Cons**: Limited IPP settings (no paper profile, no image shift, no booklet layout, copies limited to 1)
@@ -1072,12 +1002,332 @@ Flow:
 ### Option 4: Direct Socket Print (Port 9100)
 
 1. Send raw PDF or PostScript to port 9100
-2. `cat file.pdf | nc PRINTER_IP 9100`
+2. `cat file.pdf | nc 192.168.1.131 9100`
 
 **Pros**: Simplest possible, no authentication
 **Cons**: No control over print settings, uses printer defaults
 
 ---
 
-*Last updated: 2026-03-12 (v2 — added jobRestore.fcgi, jobPrintAndUnlock.fcgi, auto_print.py)*
-*Generated from live API testing against AccurioPrint 2100*
+## Per-Job Tray Selection — The Real Story (added 2026-05-26)
+
+### Problem
+
+We need to force a specific paper tray on a per-job basis (e.g., MBT for 300g cards) without an operator manually setting the panel defaults. Everything in this section was investigated against the **AccurioPrint C4065 / IC-607** at `192.168.1.250` while building the nima.bg print poller.
+
+### Option A — `setJobDetailsAndUnlock.fcgi` is harder than the doc above suggests
+
+The earlier "browser-only" note is correct but incomplete. The real obstacle:
+
+- The SPA does **not** send the response of `jobDetails.fcgi` back to the server. It sends the output of `job.getRipDataObject()`, which is a **writable subset** computed by the job model.
+- A live `jobDetails.fcgi` reply for one job contained **449 printFeatures**, most of which are read-only / device-state. Sending them back verbatim returns `InternalError`.
+- `applySendHacks(e)` (the `B(...)` function the bundle references) is **almost a no-op** — it only rewrites `printFeatures.PerfectBindPaperSize: "Custom"` → `"CustomSize"`. The heavy lifting is in `getRipDataObject()` / `getRipPrintFeatures()` which filter the data.
+- Empirically confirmed: calling `fcgiSrv.post("/setJobDetailsAndUnlock.fcgi", {params: {jobId, containerId, jobData: JSON.stringify(d)}})` *from inside the SPA's own session* — where `d` is the unfiltered `jobDetails.fcgi` response wrapped in the `{printFeatures, pageSettings, …}` envelope — still returns `InternalError`.
+
+So to drive `setJobDetailsAndUnlock` from a script you would need one of:
+
+1. **Capture an actual successful save's body** from a live SPA save (post a UI change → click Save) and replay it. Brittle: the writable subset changes with firmware, and the SPA computes it from per-job state.
+2. **Re-implement the bundle's `getRipPrintFeatures()` / `getRipDataObject()` logic in your script.** Means tracking ~30-50 writable PrintFeature fields and their constraints. Maintainable but a few weeks of work.
+3. **Walk AngularJS scopes to find the live job model and call its method.** Requires a real headless browser session. Heavy.
+
+### Option B — Use CUPS + Konica PostScript driver (CONFIRMED WORKING ✅ 2026-05-26)
+
+This sidesteps `setJobDetailsAndUnlock` entirely. The Konica AccurioPress C4080 PostScript driver writes the same job ticket *inside* the PostScript stream as `SHKM*` directives, and the IC-607 RIP honors them when the PS is dropped onto `socket://<printer>:9100`.
+
+#### What we verified
+
+- **Test print on C4065 → MBT pulled correctly with `KOMediaWeight=Thick8` (300g class).** Printer stopped asking for the 300g paper instead of silently substituting 80g (which was the previous symptom).
+- **CUPS-submitted job lands in the ProfiWEB Hold queue with the right job ticket** — `jobDetails.fcgi` afterwards shows `printFeatures.InputSlot = "MBT"`, `MainPaperProfileIndex = 22` (the "300 mat A4 legnal" profile). So the CUPS path is equivalent to a properly-set-up `setJobDetailsAndUnlock` call, just achieved differently.
+
+#### Driver download
+
+- **Title on KM site**: `IC-609 PS Driver for Mac OS X` (e.g., `IC609PSMACOS_60603MU.dmg`, ~30 MB)
+- The `.dmg` contains `KONICA MINOLTA C4080Series PS.pkg`. Inside `Driver.pkg/Scripts/Package.zip` you'll find:
+  - PPD: `Library/Printers/PPDs/Contents/Resources/en.lproj/KOIC4080_.ppd` (~720 KB)
+  - CUPS filter: `Library/Printers/KONICA_MINOLTA/Filters/10.8/pstoKOIC4080` (Mach-O x86_64+i386, runs under Rosetta on Apple Silicon)
+  - PDE plugin: `Library/Printers/KONICA_MINOLTA/PDEs/10.8/KOIC4080.plugin` (only needed for the GUI print dialog; not required for `lp -o ...`)
+
+**Critical**: this driver bundle is labelled for the **IC-609** controller, but the PPD's `*Product` line is:
+```
+*Product: "(KONICA MINOLTA C4080/C4070/C4065)"
+```
+…so it covers all three models. Confirmed: **works against the C4065's IC-607** despite the controller-naming mismatch.
+
+#### Manual install (bypassing the GUI installer)
+
+```bash
+# After expanding the .pkg and unzipping Package.zip:
+sudo mkdir -p /Library/Printers/KONICA_MINOLTA/Filters /Library/Printers/KONICA_MINOLTA/PDEs
+sudo cp pstoKOIC4080 /Library/Printers/KONICA_MINOLTA/Filters/
+sudo chmod 755 /Library/Printers/KONICA_MINOLTA/Filters/pstoKOIC4080
+sudo cp -R KOIC4080.plugin /Library/Printers/KONICA_MINOLTA/PDEs/
+sudo cp KOIC4080_.ppd /Library/Printers/PPDs/Contents/Resources/
+sudo chown -R root:wheel /Library/Printers/KONICA_MINOLTA /Library/Printers/PPDs/Contents/Resources/KOIC4080_.ppd
+
+sudo lpadmin -p NimaC4065 -E \
+  -v socket://192.168.1.250:9100 \
+  -P /Library/Printers/PPDs/Contents/Resources/KOIC4080_.ppd \
+  -o printer-is-shared=false
+```
+
+The CUPS filter has no arm64 slice, so on Apple Silicon Macs **Rosetta 2 must be installed** (`oahd` running). Verified on macOS 26.3.1 / arm64.
+
+#### Per-job options (PPD-level, drive via `lp -o`)
+
+| Option | Values | Notes |
+|---|---|---|
+| `InputSlot` | `Tray1`…`Tray11`, `MBT` | Forces a specific tray. Names match what `deviceInfo.fcgi` returns as `inputTrays[i].trayId`. |
+| `KOMediaWeight` | `NoSet`, `Normal` (62-74), `Thick` (75-80), `Thick2` (81-91), `Thick3` (92-105), `Thick4` (106-135), `Thick5` (136-176), `Thick6` (177-216), `Thick7` (217-256), `Thick8` (257-300), `Thick9` (301-350), `Thick10` (351-360) | Sets the media-weight job attribute. |
+| `KOTargetPaperSize` | `A3`, `A4`, `A5`, `A6`, `SRA3`, `SRA4`, `KMB4`, `KMB5`, `KMTabloid`, `9x11`, `Legal`, `Letter`, custom… | Output paper size. |
+| `KOMediaType` | `NoSet`, `Plain`, `Color`, `Fine`, `Envelope`, `Embossed`, `CoatedG`, `CoatedM` | Media type. |
+| `KODuplex` | `True`, `False` | 2-sided. |
+| `KOLayout` | `None`, `AdhBinding`, `Booklet`, `2in1`, `4in1Horizontal`, … | Imposition. |
+| `KOOutputOrder` | `FaceDown`, `FaceUp` | Face up/down. |
+| `KOCollate` | `Sort`, `Group` | Sorting mode. |
+
+Plus standard CUPS options: `-n <copies>`, `-o media=A4`, etc.
+
+#### Example commands
+
+```bash
+# 300g A4 on the bypass tray, simplex, 1 copy
+lp -d NimaC4065 -n 1 \
+   -o InputSlot=MBT \
+   -o KOMediaWeight=Thick8 \
+   -o KOTargetPaperSize=A4 \
+   -o KODuplex=False \
+   file.pdf
+
+# Dry-run via cupsfilter to inspect the PostScript output (without printing)
+cupsfilter -p /Library/Printers/PPDs/Contents/Resources/KOIC4080_.ppd \
+   -m application/vnd.cups-postscript \
+   -o "InputSlot=MBT" -o "KOMediaWeight=Thick8" -o "KOTargetPaperSize=A4" \
+   file.pdf > /tmp/out.ps
+
+# Check SHKM directives baked into the output
+grep -aoE "SHKM[A-Za-z]+ [^ /]+|SHKMInputSlot/[A-Za-z0-9]+" /tmp/out.ps | sort -u
+# Expected:
+#   SHKMInputSlot/MBT put
+#   SHKMMediaWeight/Thick8 put
+#   SHKMDuplex false
+#   SHKMCollate true
+```
+
+#### PostScript job-ticket format (what the filter emits)
+
+The `pstoKOIC4080` filter emits standard PostScript with a setpagedevice-like prologue using a Konica-internal dictionary called `SHKMFeatures`. Each option becomes:
+
+```postscript
+SHKMFeatures dup/SHKMInputSlot/MBT put /Sofha_P20 get exec
+SHKMFeatures dup/SHKMMediaWeight/Thick8 put /Sofha_P20 get exec
+```
+
+`Sofha` is the company that wrote the IC-607 controller firmware (Sofha GmbH; mentioned in the driver postflight script copyright). `Sofha_P20` is the dispatch handler in the printer's RIP that processes each feature/value pair. This is why **port 9100 raw PostScript works for tray selection** even though the IPP listener on port 631 doesn't — they're separate code paths inside the controller.
+
+### IPP listener (port 631) — confirmed useless for per-job control
+
+`Get-Printer-Attributes` against `ipp://192.168.1.250:631/ipp` returns:
+
+```
+printer-make-and-model = "KONICA MINOLTA AccurioPrint C4065 IC-607"
+job-creation-attributes-supported = job-priority    ← ONLY job-priority
+media-source-supported  → absent
+media-col-supported     → absent
+sides-supported         = one-sided                  ← no duplex either
+finishings-supported    = none
+```
+
+So `lp -h 192.168.1.250:631 -d ipp -o media-source=tray3 …` won't work — the printer accepts `-o job-priority=N` and that's it. The earlier note ("IPP CONFIRMED WORKING - RECOMMENDED") only meant *plain PDF goes out and prints*, not that you can configure anything per-job through it.
+
+### Quick-reference comparison
+
+| Path | Tray control? | Where the magic lives | Scriptable? |
+|---|---|---|---|
+| `setJobDetailsAndUnlock.fcgi` | **Yes** | `jobData` JSON inside a held `jobLock` | **✅ — see "ProfiWEB-only per-job settings" below (2026-05-27 finding, supersedes earlier "no" claim)** |
+| `jobSubmit.fcgi` + `jobPrintAndUnlock.fcgi` | No | Panel defaults at print time | ✅ but tray is whatever the panel says |
+| IPP (port 631) | No | Printer ignores media-* attrs | ✅ but no setting control |
+| `lp -d NimaC4065` (CUPS+PPD) | Yes | SHKM directives in the PostScript stream | ✅ but obsoleted by the ProfiWEB-only path |
+| Raw PS to port 9100 with hand-written SHKM | Yes | Same as above, without CUPS | ✅ |
+
+### Misc empirical notes
+
+- **Hold-queue display ID == `jobId`**. The number you see in the UI (e.g. `7438`) IS the value to pass to `jobId=` *when querying from the SPA's logged-in session*. Jobs uploaded via `jobSubmit.fcgi` from a fresh curl session get a 100000000-offset jobId (e.g. `100007462`). Both forms work in `jobLock.fcgi` / `jobDetails.fcgi` / `setJobDetailsAndUnlock.fcgi` — use whichever you got back from `jobList.fcgi`.
+- **`jobDetails.fcgi` returns 21 top-level keys** including `printFeatures` (449 entries on a C4065 job), `pageSettings`, `pageDetails`, `pageToneCurves`, `jobToneCurves`, `constraints`, `jobInfo`. Most are read-only, **but the server accepts the entire response back in `setJobDetailsAndUnlock.fcgi`'s `jobData=` parameter without complaint when the lock is held — see below.**
+- **C4065 paper profiles**: `MainPaperProfileIndex: 22` corresponds to "300 mat A4 legnal" (the MBT profile). The full mapping is in `paperProfileList.fcgi`. The index is what the SPA writes when an operator picks a paper from the dropdown; the matching tray's `MainPaperProfileName` in `deviceInfo.fcgi` is the human-readable name.
+- **Existing C754e/C759 in the shop have EFI Fiery E100 controllers** (advertised over Bonjour as `_ipp._tcp`), so they use Fiery PPDs. The **C4065 does not** — its IC-607 is Konica's own controller, hence the different CUPS driver lineage.
+
+---
+
+## ProfiWEB-only Per-Job Settings — The Working Recipe (added 2026-05-27)
+
+**This supersedes both the "browser-only" claim earlier in this doc AND the CUPS+PPD workaround.** A 2026-05-27 investigation showed `setJobDetailsAndUnlock.fcgi` IS fully scriptable from curl/Python. The yesterday-and-prior failures were all the **same root cause**: the same session must hold a `jobLock.fcgi` lock on the job. With the lock held, the server accepts the raw `jobDetails.fcgi` response back as `jobData=` *unchanged*, mutating only the fields you care about.
+
+### The recipe — 3 HTTP calls per print
+
+```
+POST /jobLock.fcgi                  action=lock&jobId=…&containerId=…
+GET  /jobDetails.fcgi                jobId=…&containerId=…  → raw JSON, modify in-memory
+POST /setJobDetailsAndUnlock.fcgi   jobId=…&containerId=…&jobData=<urlencoded JSON>&print=true&deleteJob=true
+```
+
+Optional: also `jobSubmit.fcgi` before the lock if you need to upload first, and `jobList.fcgi` to find the new `jobId`.
+
+### What was wrong about the earlier "browser-only" claim
+
+The earlier note said `setJobDetailsAndUnlock.fcgi` works from browser JS but fails from curl/Python with `AioJobNoExists` or `InternalError`. Today we proved:
+
+- **Calling `fcgiSrv.post` from the browser console with the *raw* `jobDetails.fcgi` response also returned `InternalError`** when we didn't have the lock. So the failure was never about the payload shape or browser-specific magic — it was missing the lock.
+- **Once `jobLock.fcgi` with `action=lock` returned successfully**, both the SPA's own filtered subset AND the raw `jobDetails.fcgi` payload worked. The error became `id: 77 "Print Manager is disconnected"` when the lock wasn't acquired in our session — generic enough that it had been misdiagnosed.
+- **`applySendHacks(e)` (the `B(…)` function the bundle references)** is **a near-no-op**: it only renames `printFeatures.PerfectBindPaperSize: "Custom"` → `"CustomSize"`. The heavy lifting that earlier notes attributed to it doesn't exist. For 99% of jobs you can skip it.
+- **`getRipDataObject()` / `getRipPrintFeatures()`** produces a different (smaller, partly-defaulted) payload than `jobDetails.fcgi`, but the server is fine with either. The SPA's filtering is a client-side concern, not a server-side requirement.
+
+### URL-encoding gotcha (the one Python-specific snag)
+
+`jobData` is a 25 KB JSON string with `:`, `,`, `&`, `=`, `"`, `{`, `}` characters. If you naively join `params` with `&` like `jobId=X&containerId=Y&jobData={...}` and `curl -d`, the server's form parser truncates `jobData` at the first `&` or `=` inside the JSON and reports `InvalidParameter: jobData is empty`. **Use `curl --data-urlencode key=value` for every parameter** so each value gets URL-encoded independently.
+
+In Python:
+
+```python
+args = ['/usr/bin/curl', '-s', '-X', 'POST', url, '-H', 'Content-Type: application/x-www-form-urlencoded']
+for k, v in params.items():
+    args.extend(['--data-urlencode', f'{k}={v}'])
+```
+
+### Which printFeatures to set (cheat sheet)
+
+For a typical "print A4 portrait on the tray loaded with weight X" use case:
+
+| Field | Set to | Notes |
+|---|---|---|
+| `InputSlot` | `'MBT'`, `'Tray1'..'Tray11'` | The tray you want feeding |
+| `MainPaperProfileIndex` | profile index from `paperProfileList.fcgi`, OR `0` for "no profile constraint" | Set to the tray's current profile index; the printer cross-checks the loaded paper |
+| `TargetPaperSize` | `'A4'` / `'A3'` / `'A5'` / `'A6'` (or `'PaperProfile'` to defer to the profile's own size) | Sets the output size |
+| `TargetPaperSize{InputSlot}` (e.g. `TargetPaperSizeMBT`) | same as `TargetPaperSize` | Per-tray override; the printer reads this when `InputSlot` matches |
+| `Orientation` | `'Port'` / `'Land'` | Content orientation |
+| `Rotate180` | `'False'` (or `'True'`) | Flip 180° |
+| `MediaWeightAuto` | `'Thick'`, `'Thick2'`…`'Thick10'`, or `'NoSet'` | Weight class constraint; the printer halts if it disagrees |
+| `MediaTypeAuto` | `'Plain'`, `'NoSet'`, etc. | Usually leave as `'NoSet'` |
+| `NumCopies` | integer | Number of copies |
+| `Duplex` | `'True'` / `'False'` | 2-sided |
+| `FeedDirMBT` / `FeedDirTrayN` | `'Auto'` / `'LongEdge'` / `'ShortEdge'` | **The printer often overrides this with the tray's panel-stored setting**. If your portrait PDF prints landscape, the operator needs to physically reload the paper short-edge first OR change the tray's stored feed direction at the panel; the per-job override is unreliable. |
+
+Weight classes from `*KOMediaWeight` in the PPD:
+
+| Class | g/m² | Notes |
+|---|---|---|
+| Normal | 62-74 | |
+| Thick | 75-80 | strict PPD range for 80g, but… |
+| Thick2 | 81-91 | **the shop's "80g" profiles are actually Thick2** — match what's on the trays |
+| Thick3 | 92-105 | |
+| Thick4 | 106-135 | |
+| Thick5 | 136-176 | 150g |
+| Thick6 | 177-216 | |
+| Thick7 | 217-256 | 250g |
+| Thick8 | 257-300 | 300g |
+| Thick9 | 301-350 | |
+| Thick10 | 351-360 | |
+
+### Tray-matching logic (what's actually safe)
+
+When picking a tray for a job by weight + size:
+
+- **Use `tray.TargetPaperSize`** (from `deviceInfo.fcgi`'s `inputTrays[]`) to match size — NOT the paper profile's `TargetPaperSize`. A profile can declare `NoSet` and still be assigned to a tray loaded with a specific size; trusting the profile's value alone matches wrong (a profile=NoSet on Tray2 loaded with A3 would incorrectly satisfy a request for A4).
+- **Use `profile.MediaWeightAuto`** (looked up via the tray's `MainPaperProfileIndex` in `paperProfileList.fcgi`) to match weight. The tray itself doesn't carry weight info.
+- **Require `paperAmount >= 5%`** to avoid sending jobs to empty/near-empty trays. The check is a polite guard; the printer will halt anyway if a tray is empty, but pre-flighting saves a wasted RIP cycle.
+- **Skip trays with `MainPaperProfileIndex == 0`** (no profile assigned). Common when the operator changed paper but didn't pick a profile at the panel — we have no way to verify what's actually in there.
+
+```python
+# Find the loaded-and-matching tray
+matches = []
+for t in device_info['printerInformation']['inputTrays']:
+    if t.get('paperAmount', 0) < 5:                    continue
+    if t.get('TargetPaperSize') != target_size:        continue
+    profile = profiles.get(t.get('MainPaperProfileIndex'))
+    if not profile:                                    continue
+    if profile.get('MediaWeightAuto') != target_thick: continue
+    matches.append((t['paperAmount'], t['trayId'], t['MainPaperProfileIndex']))
+matches.sort(reverse=True)   # prefer the tray with the most paper left
+tray_id, profile_idx = (matches[0][1], matches[0][2]) if matches else (None, None)
+```
+
+### Production status polling for completion
+
+After `setJobDetailsAndUnlock.fcgi` with `print=true&deleteJob=true`:
+
+```python
+while time.time() - start < timeout:
+    pd = curl_get('productionData.fcgi')
+    status = pd.get('productionStatus')
+    if status in ('warningStopPrint', 'error', 'aborted', 'cancelled', 'failed'):
+        # printer halted — paper jam, empty tray, operator-cancel at panel
+        return {'success': False, 'error': f'printer stopped: {status}'}
+    if not pd or not status:
+        # productionData empty; cross-check the Hold queue
+        if not any(j['jobId'] == job_id for j in curl_get('jobList.fcgi', containerId=hold)['jobLists'][0]['jobs']):
+            return {'success': True, 'job_id': job_id}
+    time.sleep(3)
+```
+
+Observed productionStatus sequence on a successful 1-page color print:
+```
+"printing" → "waitPrinting" → "printing" → "" (cleared, ~1-3s) → job gone from Hold
+```
+
+Total wallclock from `setJobDetailsAndUnlock` to "job gone from Hold" on a 1-page job: ~90-100s (most of it is the IC-607's RIP + paper-warmup).
+
+### Why the previous CUPS+PPD path was abandoned (still works, but obsolete)
+
+The CUPS+PPD approach (Konica AccurioPress C4080 PostScript PPD installed on macOS, queue → `socket://192.168.1.250:9100`) DOES work — the SHKM-tagged PostScript stream steers the IC-607 RIP correctly. But it has three real downsides vs. the ProfiWEB-only path:
+
+1. **Two-codepath maintenance** — different RIP entry point, different color path. Two pipelines to validate.
+2. **Apple deprecation warning** — `lpadmin: Printer drivers are deprecated and will stop working in a future version of CUPS.` Apple's official line. Classic PPD-based queues on macOS 26 still work but won't forever.
+3. **No clean failure signal** — CUPS marks a job done as soon as bytes are transmitted. If the printer halts after (paper jam, empty tray), the poller reports `done` but no sheet came out. The ProfiWEB path's `productionData.fcgi` polling catches `warningStopPrint` cleanly.
+
+Now that ProfiWEB-only works for per-job tray selection, the CUPS dependency was removed from kasa1 (2026-05-27).
+
+### Practical end-to-end pseudocode
+
+```python
+def profiweb_print_with_tray(filepath, host, paper_size, paper_weight, duplex=False, orientation='Port', copies=1):
+    sess = register_and_login(host)
+    
+    # 1) Find a tray with matching paper loaded (fail loud if none)
+    info = curl_get('deviceInfo.fcgi')
+    profs = {p['MainPaperProfileIndex']: p for p in curl_get('paperProfileList.fcgi')['paperProfileList']}
+    tray_id, profile_idx = find_loaded_tray(info, profs, weight_to_thick(paper_weight), paper_size)
+    if not tray_id:
+        raise NoPaperLoaded(f'no tray has {paper_weight} {paper_size}')
+    
+    # 2) Upload
+    curl_post_multipart('jobSubmit.fcgi', file=filepath, containerId=HOLD)
+    job_id = find_new_job_id(HOLD)
+    
+    # 3) Lock + read + modify + save+print  ← the magic
+    curl_post('jobLock.fcgi', action='lock', jobId=job_id, containerId=HOLD)
+    raw = curl_get('jobDetails.fcgi', jobId=job_id, containerId=HOLD)
+    raw['printFeatures'].update({
+        'InputSlot': tray_id,
+        'MainPaperProfileIndex': profile_idx,
+        'TargetPaperSize': paper_size,
+        f'TargetPaperSize{tray_id}': paper_size,
+        'Orientation': orientation,
+        'Rotate180': 'False',
+        'MediaWeightAuto': weight_to_thick(paper_weight),
+        'NumCopies': copies,
+        'Duplex': 'True' if duplex else 'False',
+    })
+    curl_post('setJobDetailsAndUnlock.fcgi',  # MUST use --data-urlencode for each param
+              jobId=job_id, containerId=HOLD,
+              jobData=json.dumps(raw),
+              print='true', deleteJob='true')
+    
+    # 4) Poll productionData until done or warningStopPrint
+    return poll_until_done(job_id, HOLD)
+```
+
+Reference implementation: `auto_print.profiweb_print_v2()` and `_find_matching_tray()` in this folder (and on kasa1 at `~/print-watcher/auto_print.py`).
+
+---
+
+*Last updated: 2026-05-27 (v4 — setJobDetailsAndUnlock.fcgi confirmed scriptable when the same session holds the lock; CUPS path retired; URL-encoding requirement documented; production status polling pattern documented)*
+*Generated from live API testing against AccurioPrint 2100 (192.168.1.131) and AccurioPrint C4065 (192.168.1.250)*

@@ -304,7 +304,11 @@ Python's `http.client` has a subtle incompatibility with the ProfiWEB server —
 
 ### setJobDetailsAndUnlock.fcgi
 
-This endpoint (used to modify print settings before printing) only works from the browser's JavaScript context, not from curl or Python. For basic printing without modifying settings, use `jobPrintAndUnlock.fcgi` instead. If you need to modify settings programmatically, consider browser automation.
+**Previously believed to be browser-only — now confirmed fully scriptable** (2026-05-27). The catch is that the *same session* must hold a `jobLock.fcgi` lock on the job before calling it; with the lock, the server accepts the raw `jobDetails.fcgi` response back as `jobData=` (mutate only the fields you care about). Without the lock you get a generic `"Print Manager is disconnected"` error that was easy to misdiagnose.
+
+**Gotcha**: `jobData` is a 25 KB JSON blob containing `&`, `=`, `"`, `{`, `}`. Use `curl --data-urlencode key=value` for every parameter (each value encoded independently), or the server's form parser truncates `jobData` at the first stray character and returns `InvalidParameter: jobData is empty`.
+
+This is what enables per-job tray selection, paper-profile selection, and weight enforcement from `auto_print.py`. See [`PROFIWEB_API_REFERENCE.md`](PROFIWEB_API_REFERENCE.md#profiweb-only-per-job-settings--the-working-recipe-added-2026-05-27) for the full recipe.
 
 ### Admin Passwords
 
